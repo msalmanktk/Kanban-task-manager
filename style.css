@@ -19,6 +19,26 @@ html{
 
     --primary-text-color:#f4f4f4;
     --delete-color : #ff4d4d;
+
+    /* NEW: a single accent reserved for the ONE primary action on
+       screen (opening/submitting the Add Task flow). Everything
+       else (Move, Cancel, Delete) stays neutral or uses its own
+       existing color, so the primary action visually stands out.
+       (Moved here from resposiveness.css — it's a core design
+       decision now, not just a responsiveness tweak.) */
+    --accent-primary: #4da3ff;
+    --accent-primary-text: #04121f;
+
+    /* NEW: one accent per column, used for a top border + a small
+       dot next to each column's heading, so ToDo / In Progress /
+       Done are recognizable by color, not just by reading the text */
+    --accent-todo: #8a93a6;
+    --accent-progress: #e0a458;
+    --accent-done: #4dab6d;
+
+    /* NEW: dimmer text for less-important content (task descriptions),
+       so the task title still reads as the most important line */
+    --text-secondary: #a3a3a3;
    
     /* padding variables  */
     --nav-padding:15px 30px;
@@ -68,6 +88,18 @@ nav button{
     border-radius: var(--border-radius-m);
 }
 
+/* NEW: this is the ONE primary action in the nav — make it the
+   accent color so it's obviously the main thing to press.
+   An ID selector naturally beats "nav button" above, no !important needed. */
+#toggle-modal{
+    background-color: var(--accent-primary);
+    color: var(--accent-primary-text);
+    font-weight: 600;
+}
+#toggle-modal:hover{
+    filter: brightness(1.08);
+}
+
 section{
     padding: var(--section-padding);
     display: flex;
@@ -77,6 +109,14 @@ section{
     gap: var(--padding-xxl);
     
 }
+/* NEW: assign each column its accent color here. Because CSS custom
+   properties inherit downward, everything inside #todo/#progress/#done
+   (the border below, the dot in the heading) can just reference
+   var(--column-accent) without repeating three separate rules everywhere. */
+#todo{ --column-accent: var(--accent-todo); }
+#progress{ --column-accent: var(--accent-progress); }
+#done{ --column-accent: var(--accent-done); }
+
 section .task-column{
     background-color: var(--bg-button-color);
     flex-grow: 1;
@@ -86,6 +126,9 @@ section .task-column{
     flex-direction: column;
     gap: var(--padding-m);
     border-radius: var(--border-radius-m);
+    /* NEW: colored top edge makes each column recognizable at a glance,
+       not just by its text label */
+    border-top: 3px solid var(--column-accent, transparent);
     transition: all 0.7s cubic-bezier(0.19, 1, 0.22, 1);
 }
 section .task-column.hover-over{
@@ -97,6 +140,19 @@ section .task-column .heading{
     display: flex;
     align-items: center;
     justify-content: space-between;
+}
+
+/* NEW: small colored dot before the column name, matching the
+   top-border accent above */
+section .task-column .heading .left::before{
+    content: "";
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin-right: 8px;
+    border-radius: 50%;
+    background-color: var(--column-accent, var(--primary-text-color));
+    vertical-align: middle;
 }
 
 /* NEW: wraps the task title and the ⋮ "move" button on one row,
@@ -140,7 +196,68 @@ section .task-column .task{
     flex-direction: column;
     gap: var(--padding-s);
     cursor: grab;
+    /* NEW: plays once when a task is first added to the DOM */
+    animation: taskFadeIn 0.25s ease;
+}
 
+/* NEW: title reads as the important line — brighter and bolder */
+section .task-column .task .task-top h2{
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--primary-text-color);
+}
+
+/* NEW: description takes a back seat to the title */
+section .task-column .task p{
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.45;
+    word-break: break-word;
+}
+
+/* NEW: added by script.js just before a task is removed, so it can
+   fade/shrink out instead of vanishing instantly */
+section .task-column .task.removing{
+    animation: taskFadeOut 0.2s ease forwards;
+    pointer-events: none;
+}
+
+@keyframes taskFadeIn{
+    from{
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to{
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes taskFadeOut{
+    from{
+        opacity: 1;
+        transform: scale(1);
+    }
+    to{
+        opacity: 0;
+        transform: scale(0.92);
+    }
+}
+
+/* NEW: shown inside a column when it has no tasks, so an empty
+   column reads as "empty and ready for a task" instead of "broken" */
+section .task-column .empty-state{
+    flex: 1;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    border: 2px dashed rgba(255, 255, 255, 0.15);
+    border-radius: var(--border-radius-m);
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    padding: var(--padding-xl);
 }
 section .task-column .task button{
     align-self: flex-end;
@@ -200,6 +317,17 @@ section .task-column .task button{
     border-radius: var(--border-radius-m);
     width: fit-content;
     align-self: center;
+}
+
+/* NEW: this is the primary action inside the modal too — same
+   accent treatment as #toggle-modal, for the same reason */
+#add-new-task{
+    background-color: var(--accent-primary);
+    color: var(--accent-primary-text);
+    font-weight: 600;
+}
+#add-new-task:hover{
+    filter: brightness(1.08);
 }
 
 /* =========================================================
