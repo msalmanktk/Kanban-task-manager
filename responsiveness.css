@@ -1,0 +1,380 @@
+/* =========================================================
+   resposiveness.css
+   Loaded AFTER style.css — only responsiveness + polish here.
+   Nothing in style.css is edited; this file layers on top of it.
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   0. Extra design tokens (new, don't touch existing ones)
+   --------------------------------------------------------- */
+:root {
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.45);
+  --accent-color: #4da3ff;
+  --column-min-height: 120px;
+}
+
+/* ---------------------------------------------------------
+   1. General polish — applies at every screen size
+   --------------------------------------------------------- */
+
+/* Smooth, consistent transitions everywhere */
+nav button,
+.task-column .task,
+.modal .center button,
+.task-column {
+  transition: transform 0.18s ease, box-shadow 0.18s ease,
+    background-color 0.18s ease, opacity 0.18s ease;
+}
+
+/* Give task cards a little depth and a nicer grab state */
+section .task-column .task {
+  box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+section .task-column .task:active {
+  cursor: grabbing;
+}
+
+/* Lift task cards on hover, but only on devices that truly hover
+   (skips phones/tablets so tapping doesn't get a stuck hover state) */
+@media (hover: hover) and (pointer: fine) {
+  section .task-column .task:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+  }
+
+  nav button:hover,
+  .modal .center button:hover {
+    filter: brightness(1.15);
+  }
+
+  section .task-column .task button.deletebtn:hover {
+    filter: brightness(1.1);
+  }
+}
+
+/* Turn the count into a small pill badge instead of plain text */
+section .task-column .heading .right {
+  background-color: rgba(255, 255, 255, 0.08);
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  min-width: 1.5rem;
+  text-align: center;
+}
+
+/* Every column always shows a usable drop target, even when empty */
+section .task-column {
+  min-height: var(--column-min-height);
+}
+
+/* ---------------------------------------------------------
+   NOTE: this file previously had a "Touch drag-and-drop support"
+   block here (.task-ghost, .dragging-source, touch-action: none)
+   for a Pointer-Events-based drag on touchscreens. It's been
+   removed — the "Move to..." menu (see .move-menu below and
+   openMoveMenu() in script.js) now covers moving tasks on mobile,
+   so cards no longer need touch-action: none either; normal
+   touch scrolling inside a column works everywhere again.
+   --------------------------------------------------------- */
+
+/* Keyboard accessibility: visible focus rings everywhere */
+nav button:focus-visible,
+.modal .center button:focus-visible,
+.modal .center input:focus-visible,
+.modal .center textarea:focus-visible,
+.task-column .task button:focus-visible,
+.move-menu-option:focus-visible,
+.move-menu-cancel:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+/* Thin, unobtrusive scrollbars for columns that grow tall */
+.task-column {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+}
+
+.task-column::-webkit-scrollbar {
+  width: 6px;
+}
+
+.task-column::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+}
+
+/* Respect users who've asked for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  section .task-column.hover-over {
+    scale: 1;
+  }
+}
+
+/* =========================================================
+   2. Large desktop — cap width, add breathing room
+   ========================================================= */
+@media (min-width: 1400px) {
+  main {
+    max-width: 1440px;
+    margin: 0 auto;
+  }
+
+  section.board {
+    gap: 40px;
+  }
+}
+
+/* =========================================================
+   3. Tablet / small laptop (1024px and below)
+   ========================================================= */
+@media (max-width: 1024px) {
+  :root {
+    --nav-padding: 14px 22px;
+    --section-padding: 14px 22px;
+  }
+
+  section.board {
+    gap: 20px;
+  }
+
+  nav .left {
+    font-size: 1.15rem;
+  }
+}
+
+/* =========================================================
+   4. Tablets / large phones (768px and below)
+   Board switches from a row of 3 columns to a stacked column
+   layout so nothing gets squeezed.
+   ========================================================= */
+@media (max-width: 768px) {
+  html,
+  body {
+    height: auto;
+    min-height: 100%;
+  }
+
+  main {
+    height: auto;
+    min-height: 100vh;
+  }
+
+  :root {
+    --nav-padding: 12px 18px;
+    --section-padding: 16px 18px;
+  }
+
+  nav {
+    flex-wrap: wrap;
+    gap: var(--padding-m);
+  }
+
+  nav .left {
+    font-size: 1.1rem;
+  }
+
+  nav button {
+    font-size: 0.9rem;
+    padding: var(--padding-s) var(--padding-m);
+  }
+
+  section.board {
+    flex-direction: column;
+    gap: var(--padding-l);
+    overflow: visible;
+  }
+
+  section .task-column {
+    width: 100%;
+    max-height: 45vh;
+    overflow-y: auto;
+  }
+
+  /* A gentler hover-over cue that won't overflow a full-width column */
+  section .task-column.hover-over {
+    scale: 1;
+    border: 2px dashed var(--primary-text-color);
+    background-color: rgba(255, 255, 255, 0.03);
+  }
+
+  .modal .center {
+    width: 88%;
+    max-width: 480px;
+  }
+
+  /* NEW: On phones/tablets, the small anchored dropdown from
+     style.css becomes a full-width bottom sheet instead — easier
+     to hit with a thumb and doesn't risk landing off-screen near
+     a screen edge the way a small anchored popup could. Only the
+     positioning/sizing changes here; colors, spacing tokens, and
+     the option buttons themselves are inherited from style.css. */
+  .move-menu {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    min-width: 0;
+    border-radius: var(--border-radius-l) var(--border-radius-l) 0 0;
+    padding: var(--padding-l);
+    /* keep the sheet clear of the home-indicator / gesture-bar
+       area on notched phones */
+    padding-bottom: max(var(--padding-l), env(safe-area-inset-bottom));
+  }
+
+  .move-menu-option,
+  .move-menu-cancel {
+    padding: var(--padding-l) var(--padding-m);
+    font-size: 1rem;
+  }
+
+  /* Slightly bigger tap target for the ⋮ button on touch screens */
+  section .task-column .task .move-btn {
+    font-size: 1.4rem;
+    padding: 6px 10px;
+  }
+}
+
+/* =========================================================
+   5. Phones (480px and below)
+   ========================================================= */
+@media (max-width: 480px) {
+  :root {
+    --nav-padding: 10px 14px;
+    --section-padding: 12px 14px;
+    --padding-xxl: 18px;
+  }
+
+  nav {
+    padding: var(--nav-padding);
+  }
+
+  nav .left {
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  nav button {
+    font-size: 0.85rem;
+    padding: 8px 12px;
+    border-radius: var(--border-radius-s);
+  }
+
+  section.board {
+    gap: var(--padding-m);
+  }
+
+  section .task-column {
+    padding: var(--padding-m);
+    max-height: 42vh;
+    border-radius: var(--border-radius-s);
+  }
+
+  section .task-column .heading .left {
+    font-size: 0.95rem;
+  }
+
+  section .task-column .task {
+    padding: var(--padding-s) var(--padding-m);
+    border-radius: var(--border-radius-s);
+  }
+
+  section .task-column .task h2 {
+    font-size: 1rem;
+    word-break: break-word;
+  }
+
+  section .task-column .task p {
+    font-size: 0.9rem;
+    word-break: break-word;
+  }
+
+  section .task-column .task button.deletebtn {
+    font-size: 0.8rem;
+    padding: 6px 10px;
+  }
+
+  /* Modal becomes a near full-width sheet, comfortable to type in */
+  .modal .center {
+    width: 92%;
+    max-width: none;
+    padding: var(--padding-xl);
+    border-radius: var(--border-radius-m);
+  }
+
+  .modal .center input,
+  .modal .center textarea {
+    /* 16px minimum stops iOS Safari from auto-zooming on focus */
+    font-size: 16px;
+  }
+
+  .modal .center textarea {
+    min-height: 90px;
+    resize: vertical;
+  }
+
+  .modal .center button {
+    width: 100%;
+    padding: 12px;
+  }
+}
+
+/* =========================================================
+   6. Very small phones (360px and below)
+   ========================================================= */
+@media (max-width: 360px) {
+  nav .left {
+    font-size: 0.95rem;
+  }
+
+  nav button {
+    font-size: 0.8rem;
+    padding: 7px 10px;
+  }
+
+  section .task-column {
+    max-height: 38vh;
+  }
+}
+
+/* =========================================================
+   7. Landscape phones — short viewport height
+   Keeps the modal and columns from overflowing top-to-bottom
+   ========================================================= */
+@media (max-height: 480px) and (orientation: landscape) {
+  section .task-column {
+    max-height: 60vh;
+  }
+
+  .modal .center {
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+}
+
+/* ---------------------------------------------------------
+   8. Safe-area padding for notched phones (iPhone, etc.)
+   --------------------------------------------------------- */
+@supports (padding: max(0px)) {
+  nav {
+    padding-left: max(var(--padding-xl), env(safe-area-inset-left));
+    padding-right: max(var(--padding-xl), env(safe-area-inset-right));
+  }
+
+  section.board {
+    padding-left: max(18px, env(safe-area-inset-left));
+    padding-right: max(18px, env(safe-area-inset-right));
+    padding-bottom: max(15px, env(safe-area-inset-bottom));
+  }
+}
